@@ -171,8 +171,8 @@
 	-Xmn1024m：设置JVM新生代大小（JDK1.4之后版本）。一般-Xmn的大小是-Xms的1/2左右，不要设置的过大或过小，过大导致老年代变小，频繁Full GC，过小导致minor GC频繁。如果不设置-Xmn，可以采用-XX:NewRatio=2来设置，也是一样的效果
 	-XX:NewSize：设置新生代大小
 	-XX:MaxNewSize：设置最大的新生代大小
-	-XX:PermSize：设置永久代大小
-	-XX:MaxPermSize：设置最大永久代大小
+	-XX:PermSize：设置永久代大小（在 Tomcat8 移出了该参数）
+	-XX:MaxPermSize：设置最大永久代大小（在 Tomcat8 移出了该参数）
 	-XX:NewRatio=4：设置年轻代（包括 Eden 和两个 Survivor 区）与终身代的比值（除去永久代）。设置为 4，则年轻代与终身代所占比值为 1：4，年轻代占整个堆栈的 1/5
 	-XX:MaxTenuringThreshold=10：设置垃圾最大年龄，默认为：15。如果设置为 0 的话，则年轻代对象不经过 Survivor 区，直接进入年老代。对于年老代比较多的应用，可以提高效率。如果将此值设置为一个较大值，则年轻代对象会在 Survivor 区进行多次复制，这样可以增加对象再年轻代的存活时间，增加在年轻代即被回收的概论。需要注意的是，设置了 -XX:MaxTenuringThreshold，并不代表着，对象一定在年轻代存活15次才被晋升进入老年代，它只是一个最大值，事实上，存在一个动态计算机制，计算每次晋入老年代的阈值，取阈值和MaxTenuringThreshold中较小的一个为准。
 	-XX:+DisableExplicitGC：这个将会忽略手动调用 GC 的代码使得 System.gc() 的调用就会变成一个空调用，完全不会触发任何 GC
@@ -265,6 +265,35 @@ fi
 	- `service iptables save`
 	- `service iptables restart`
 
+## Dockerfile 构建 Tomcat 镜像并部署 war 包
+
+- 因为我自己改了 Tomcat 的几个配置文件，所以要把那几个文件和 Dockerfile 放一起进行构建。
+- 在宿主机上创建 dockerfile 存放目录和 logs 目录：`mkdir -p /opt/cas-dockerfile/ /data/logs/tomcat/`
+
+```
+FROM tomcat:8.0.46-jre8
+MAINTAINER GitNavi <gitnavi@qq.com>
+
+RUN rm -rf /usr/local/tomcat/webapps/*
+
+ADD server.xml /usr/local/tomcat/conf/
+ADD cas.war /usr/local/tomcat/webapps/
+CMD ["catalina.sh", "run"]
+
+EXPOSE 8081
+```
+
+- 须知：容器中的 Tomcat 日志我是输出在容器的目录下：`/data/logs/`，所以我挂载中会有这个挂载选项
+- 开始构建：
+	- `cd /opt/cas-dockerfile`
+	- `docker build . --tag="sso/cas-tomcat8:v1.0.9"`
+	- `docker run -d -p 8111:8081 -v /data/logs/tomcat/:/data/logs/ --name="cas-tomcat-1.0.9" sso/cas-tomcat8:v1.0.9`
+	- 查看启动后容器列表：`docker ps`
+	- 进入 tomcat 容器终端查看一些情况：`docker exec -it 57a682478233 /bin/bash`
+	- jar 应用的日志是输出在容器的 /opt 目录下，因为我们上面用了挂载，所在在我们宿主机的 /usr/local/logs 目录下可以看到输出的日志
+- CentOS 7 防火墙开放端口：
+	- `firewall-cmd --zone=public --add-port=8111/tcp --permanent`
+	- `firewall-cmd --reload`
 
 ## 其他
 

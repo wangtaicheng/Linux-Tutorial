@@ -1,20 +1,20 @@
 #!/bin/sh
 
-echo "安装 vim 和对应配置"
-
-yum install -y vim
-
-curl https://raw.githubusercontent.com/wklken/vim-for-server/master/vimrc > ~/.vimrc
-
-
-echo "安装 zsh 和 oh-my-zsh"
-
+echo "开始安装 zsh"
 yum install -y zsh
 
+echo "开始安装 oh-my-zsh"
 yum install -y git
-
 wget https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O - | sh
 
+echo "设置默认终端为 oh-my-zsh"
 chsh -s /bin/zsh root
 
-echo "请重新连接就可以体验 zsh 了."
+echo "====================="
+
+echo "开始安装 vim"
+yum install -y vim
+
+echo "设置 vim 配置"
+curl https://raw.githubusercontent.com/wklken/vim-for-server/master/vimrc > ~/.vimrc
+

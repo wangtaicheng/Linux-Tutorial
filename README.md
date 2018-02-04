@@ -6,6 +6,7 @@
 - 带动更多的人进入 Linux 世界，特别是做 Java 开发的人
 - Github 项目地址，欢迎 `Fork`、`Star`：<https://github.com/judasn/Linux-Tutorial>
 - 文章中用到的一些安装包归纳整理：<http://pan.baidu.com/s/1skAwrFn>
+- Gitbook 在线阅读地址：<https://youmeek.gitbooks.io/linux-tutorial/content/>
 - **学得越多越是明白一个人的力量是不够的，我只是起了一个引子，希望你能一起参与，真心希望！！！（鞠躬）**
 
 ## 目录(Contents)
@@ -29,6 +30,7 @@
 - [Yum 下载安装包及对应依赖包](Off-line-Yum-Install.md)
 - [Zsh 入门](Zsh.md)
 - [日常维护](maintenance.md)
+- [日常监控](monitor.md)
 - [nmon 系统性能监控工具](Nmon.md)
 - [SSH（Secure Shell）介绍](SSH.md)
 - [FTP（File Transfer Protocol）介绍](FTP.md)
@@ -74,6 +76,8 @@
 - [Docker 安装和使用](Docker-Install-And-Usage.md)
 - [LDAP 安装和使用](LDAP-Install-And-Settings.md)
 - [Alfresco 安装和使用](Alfresco-Install-And-Usage.md)
+- [Apache Thrift 安装和使用](Thrift-Install-And-Usage.md)
+- [Node.js 安装和使用](Node-Install-And-Usage.md)
 
 
 ## 下一步(Next)
@@ -84,7 +88,6 @@
 - ActiveMQ 服务安装和配置
 - Zabbix 安装和配置
 - Nagios 安装和配置
-- Docker 安装和配置
 - sed 学习
 - 常用脚本
 
@@ -120,7 +123,8 @@
 |:---------|:---------|
 |Judas.n|<http://code.YouMeek.com>|
 |nl101531|<https://github.com/nl101531>|
+|fooofei|<https://github.com/fooofei>|
 
 ## AD
 
-- [我个人开发的个性化定制网址导航：GitNavi.com](http://www.gitnavi.com)
+- [推荐：程序员的个性化网址导航：GitNavi.com](http://www.gitnavi.com)
