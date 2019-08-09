@@ -37,7 +37,7 @@
 - oh-my-zsh 帮我们整理了一些常用的 Zsh 扩展功能和主题：<https://github.com/robbyrussell/oh-my-zsh>
 - 我们无需自己去捣搞 Zsh，直接用 oh-my-zsh 就足够了，如果你想继续深造的话那再去弄。
 - 先安装 git：`sudo yum install -y git`
-- 安装 oh-my-zsh（这个过程可能会有点慢，或者需要重试几次）：`wget https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O - | sh`
+- 安装 oh-my-zsh（这个过程可能会有点慢，或者需要重试几次）：`wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O - | sh`
 - 整个过程效果如下图：
     - ![oh-my-zsh 安装](../images/Zsh-a-1.jpg)
 - 在以 root 用户为前提下，oh-my-zsh 的安装目录：**/root/.oh-my-zsh**
@@ -64,6 +64,18 @@
 - 编辑配置文件：`vim /root/.zshrc`，找到下图的地方，怎么安装，原作者注释写得很清楚了，别装太多了，默认 git 是安装的。
     - ![oh-my-zsh 安装](../images/Zsh-c-1.jpg)
 - 插件推荐：
+    - `zsh-autosuggestions`  
+        - 这个插件会对历史命令一些补全，类似 fish 终端
+        - 插件官网：<https://github.com/zsh-users/zsh-autosuggestions>  
+        - 安装，复制该命令：`git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions`
+		- 编辑：`vim ~/.zshrc`，找到这一行，后括号里面的后面添加：`plugins=( 前面的一些插件名称，换行，加上：zsh-autosuggestions)`
+		- 刷新下配置：`source ~/.zshrc`
+    - `zsh-syntax-highlighting`  
+        - 这个插件会对终端命令高亮显示,比如正确的拼写会是绿色标识,否则是红色,另外对于一些shell输出语句也会有高亮显示,算是不错的辅助插件  
+        - 插件官网：<https://github.com/zsh-users/zsh-syntax-highlighting>  
+        - 安装，复制该命令：`git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting`
+		- 编辑：`vim ~/.zshrc`，找到这一行，后括号里面的后面添加：`plugins=( 前面的一些插件名称，换行，加上：zsh-syntax-highlighting)`
+		- 刷新下配置：`source ~/.zshrc`
     - `wd`
         - 简单地讲就是给指定目录映射一个全局的名字，以后方便直接跳转到这个目录，比如：
         - 编辑配置文件，添加上 wd 的名字：`vim /root/.zshrc`
@@ -80,12 +92,6 @@
         - 进入解压后目录并安装：`cd autojump_v21.1.2/ ; ./install.sh`
         - 再执行下这个：`source /etc/profile.d/autojump.sh`
         - 编辑配置文件，添加上 autojump 的名字：`vim /root/.zshrc`
-    - `zsh-syntax-highlighting`  
-        -   这个插件会对终端命令高亮显示,比如正确的拼写会是绿色标识,否则是红色,另外对于一些shell输出语句也会有高亮显示,算是不错的辅助插件  
-        -   插件官网：<https://github.com/zsh-users/zsh-syntax-highlighting>  
-        - 安装，复制该命令：'git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting'
-		- 编辑：`vim ~/.zshrc`，找到这一行，后括号里面的后面添加：`plugins=( 前面的一些插件名称 zsh-syntax-highlighting)`
-		- 刷新下配置：`source ~/.zshrc`
 
 ### 主题
 

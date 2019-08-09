@@ -1,18 +1,119 @@
 # Elasticsearch 知识
 
-## 环境
+## Docker 单节点部署
 
-- CentOS 7.3
+- 官网：<https://hub.docker.com/_/elasticsearch>
+- 官网列表：<https://www.docker.elastic.co/>
+- 阿里云支持版本：<https://data.aliyun.com/product/elasticsearch>
+    - 阿里云有一个 `插件配置` 功能，常用的 Elasticsearch 插件都带了，勾选下即可安装。也支持上传安装。
+- 注意：docker 版本下 client.transport.sniff = true 是无效的。
+
+#### 5.6.x
+
+- `vim ~/elasticsearch-5.6.8-docker.yml`
+- 启动：`docker-compose -f ~/elasticsearch-5.6.8-docker.yml -p elasticsearch_5.6.8 up -d`
+
+```
+version: '3'
+services:
+  elasticsearch1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.8
+    container_name: elasticsearch-5.6.8
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "cluster.name=elasticsearch"
+      - "network.host=0.0.0.0"
+      - "http.host=0.0.0.0"
+      - "xpack.security.enabled=false"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - /data/docker/elasticsearch/data:/usr/share/elasticsearch/data
+
+```
+
+
+#### 6.7.x（带 ik 分词）
+
+- `vim ~/elasticsearch-6.7.2-docker.yml`
+- 启动：`docker-compose -f ~/elasticsearch-6.7.2-docker.yml -p elasticsearch_6.7.2 up -d`
+- `mkdir -p /data/docker/elasticsearch-6.7.2/data`
+- 如果官网镜像比较慢可以换成阿里云：`registry.cn-hangzhou.aliyuncs.com/elasticsearch/elasticsearch:6.7.2`
+- 下载 ik 分词（版本必须和 Elasticsearch 版本对应，包括小版本号）：<https://github.com/medcl/elasticsearch-analysis-ik>
+
+```
+version: '3'
+services:
+  elasticsearch1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.7.2
+    container_name: elasticsearch-6.7.2
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "cluster.name=elasticsearch"
+      - "network.host=0.0.0.0"
+      - "http.host=0.0.0.0"
+      - "xpack.security.enabled=false"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - /data/docker/elasticsearch-6.7.2/data:/usr/share/elasticsearch/data
+      - /data/docker/ik:/usr/share/elasticsearch/plugins/ik
+```
+
+- Elasticsearch Head 插件地址：<https://chrome.google.com/webstore/detail/ffmkiejjmecolpfloofpjologoblkegm>
+- 测试：
+
+
+```
+http://localhost:9200/
+_analyze?pretty   POST
+
+
+{"analyzer":"ik_smart","text":"安徽省长江流域"}
+```
+
+- ik_max_word 和 ik_smart 什么区别?
+
+```
+ik_max_word: 会将文本做最细粒度的拆分，比如会将“中华人民共和国国歌”拆分为“中华人民共和国,中华人民,中华,华人,人民共和国,人民,人,民,共和国,共和,和,国国,国歌”，会穷尽各种可能的组合，适合 Term Query；
+ik_smart: 会做最粗粒度的拆分，比如会将“中华人民共和国国歌”拆分为“中华人民共和国,国歌”，适合 Phrase 查询。
+```
+
+
+-------------------------------------------------------------------
+
+
+## Elasticsearch 6.5.x 安装（适配与 5.5.x，6.6.x）
+
+#### 环境
+
+- CentOS 7.x
+- 至少需要 2G 内存
 - root 用户
 - JDK 版本：1.8（最低要求），主推：JDK 1.8.0_121 以上
 - 关闭 firewall
 	- `systemctl stop firewalld.service` #停止firewall
 	- `systemctl disable firewalld.service` #禁止firewall开机启动
 
-## Elasticsearch 5.5.0 安装
+#### 先配置部分系统变量
 
-### 先配置部分系统变量
-
+- 更多系统层面的配置可以看官网：<https://www.elastic.co/guide/en/elasticsearch/reference/current/system-config.html>
 - 配置系统最大打开文件描述符数：`vim /etc/sysctl.conf`
 
 ```
@@ -29,12 +130,27 @@ elasticsearch hard memlock unlimited
 * hard nofile 262144
 ```
 
-### 开始安装
+#### 开始安装
 
-- 官网 RPM 安装流程（重要，以下资料都是对官网的总结）：<https://www.elastic.co/guide/en/elasticsearch/reference/5.5/rpm.html>
-- `rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch`
+- 检查：`rpm -qa | grep elastic`
+- 卸载：`rpm -e --nodeps elasticsearch`
+- 官网 RPM 安装流程（重要，以下资料都是对官网的总结）：<https://www.elastic.co/guide/en/elasticsearch/reference/current/rpm.html>
+- 导入 KEY：`rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch`
 - 新建文件：`vim /etc/yum.repos.d/elasticsearch.repo`
-- 内容如下：
+- 内容如下（6.x）：
+
+```
+[elasticsearch-6.x]
+name=Elasticsearch repository for 6.x packages
+baseurl=https://artifacts.elastic.co/packages/6.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+autorefresh=1
+type=rpm-md
+```
+
+- 内容如下（5.x）：
 
 ```
 [elasticsearch-5.x]
@@ -47,24 +163,135 @@ autorefresh=1
 type=rpm-md
 ```
 
-- 开始安装：`yum install -y elasticsearch`，国内网络安装会很慢，慢慢等
+- 开始安装：`yum install -y elasticsearch`，预计文件有 108M 左右，国内网络安装可能会很慢，慢慢等
+	- 安装完后会多了一个：elasticsearch 用户和组
+- 设置 java 软链接：`ln -s /usr/local/jdk1.8.0_181/jre/bin/java /usr/local/sbin/java`
+- 启动和停止软件（默认是不启动的）：
+	- 启动：`systemctl start elasticsearch.service`
+	- 状态：`systemctl status elasticsearch.service`
+	- 停止：`systemctl stop elasticsearch.service`
+	- 重新启动：`systemctl restart elasticsearch.service`
 - 安装完成后，增加系统自启动：
-- `/bin/systemctl daemon-reload`
-- `/bin/systemctl enable elasticsearch.service`
-- 启动和停止软件：
-- `systemctl start elasticsearch.service`
-- `systemctl stop elasticsearch.service`
+	- `/bin/systemctl daemon-reload`
+	- `/bin/systemctl enable elasticsearch.service`
+- 检查：`curl -X GET "localhost:9200/"`
 
-### RPM 安装后的一些配置位置说明
+#### RPM 安装后的一些配置位置说明
 
+- 更多说明可以看官网：<https://www.elastic.co/guide/en/elasticsearch/reference/current/rpm.html#rpm-configuring>
+- 更加详细的配置可以看：<https://www.elastic.co/guide/en/elasticsearch/reference/current/important-settings.html>
 - 默认系统生成了一个 elasticsearch 用户，下面的目录权限属于该用户
-- Elasticsearch 安装后位置：/usr/share/elasticsearch
-- Elasticsearch 的软件环境、堆栈的设置：/etc/sysconfig/elasticsearch
-- Elasticsearch 的集群设置：/etc/elasticsearch/elasticsearch.yml
-- Log 位置：/var/log/elasticsearch/
-- 索引数据位置：/var/lib/elasticsearch
-- 插件位置：/usr/share/elasticsearch/plugins
-- 脚本文件位置：/etc/elasticsearch/scripts
+- Elasticsearch 安装后位置：`/usr/share/elasticsearch`
+- Elasticsearch 的软件环境、堆栈的设置：`/etc/sysconfig/elasticsearch`
+- Elasticsearch 的集群设置：`/etc/elasticsearch/elasticsearch.yml`
+- Log 位置：`/var/log/elasticsearch/`
+- 索引数据位置：`/var/lib/elasticsearch`
+- 插件位置：`/usr/share/elasticsearch/plugins`
+- 脚本文件位置：`/etc/elasticsearch/scripts`
+
+#### 配置
+
+- 编辑配置文件：`vim /etc/elasticsearch/elasticsearch.yml`
+- 默认只能 localhost 访问，修改成支持外网访问
+
+```
+打开这个注释：#cluster.name: my-application
+集群名称最好是自己给定，不然有些 client 端会连不上，或者要求填写
+
+打开这个注释：#network.host: 192.168.0.1
+改为：network.host: 0.0.0.0
+```
+
+#### 安装 X-Pack（6.5.x 默认带了 x-pack）
+
+- `cd /usr/share/elasticsearch && bin/elasticsearch-plugin install x-pack`
+
+#### GUI 客户端工具
+
+- 优先推荐：<https://www.elastic-kaizen.com/download.html>
+- <https://github.com/ElasticHQ/elasticsearch-HQ>
+
+
+#### 安装 Chrome 扩展的 Head
+
+- 下载地址：<https://chrome.google.com/webstore/detail/elasticsearch-head/ffmkiejjmecolpfloofpjologoblkegm/>
+
+#### 其他细节
+
+- 如果就单个节点测试，新建索引的时候副本数记得填 0。
+
+#### 创建索引并设置 mapping
+
+- 官网类型说明：<https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html>
+
+```
+curl -XPUT 'http://127.0.0.1:9200/grafanadb' -H 'Content-Type: application/json' -d'
+{
+  "settings": {
+    "refresh_interval": "5s",
+    "number_of_shards": 5,
+    "number_of_replicas": 0
+  },
+  "mappings": {
+    "radar": {
+      "properties": {
+        "request_num": {
+          "type": "long"
+        },
+        "post_date": {
+          "type": "date",
+          "format": "yyyy-MM-dd HH:mm:ss||epoch_millis"
+        }
+      }
+    }
+  }
+}
+'
+```
+
+
+#### 批量增加 / 删除测试数据
+
+- 官网文档：<https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html>
+- 批量增加，cURL 格式：
+
+```
+curl -X POST "http://127.0.0.1:9200/_bulk" -H 'Content-Type: application/json' -d'
+{ "index" : { "_index" : "grafanadb", "_type" : "radar", "_id" : "100001" } }
+{ "post_date" : "2018-12-01 10:00:00", "request_num" :  1 }
+{ "index" : { "_index" : "grafanadb", "_type" : "radar", "_id" : "100002" } }
+{ "post_date" : "2018-12-01 10:00:05", "request_num" :  2 }
+{ "index" : { "_index" : "grafanadb", "_type" : "radar", "_id" : "100003" } }
+{ "post_date" : "2018-12-01 10:00:10", "request_num" :  3 }
+{ "index" : { "_index" : "grafanadb", "_type" : "radar", "_id" : "100004" } }
+{ "post_date" : "2018-12-01 10:00:15", "request_num" :  4 }
+{ "index" : { "_index" : "grafanadb", "_type" : "radar", "_id" : "100005" } }
+{ "post_date" : "2018-12-01 10:00:20", "request_num" :  5 }
+'
+```
+
+- 批量删除，cURL 格式：
+
+```
+curl -X POST "http://127.0.0.1:9200/_bulk" -H 'Content-Type: application/json' -d'
+{ "delete": { "_index": "grafanadb", "_type": "radar", "_id": "100001" } }
+{ "delete": { "_index": "grafanadb", "_type": "radar", "_id": "100002" } }
+'
+```
+
+- 清空索引所有数据，分成5个切片去执行删除，cURL 格式：
+
+```
+curl -X POST "http://127.0.0.1:9200/索引名称/类型名称/_delete_by_query?refresh&slices=5&pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "match_all": {}
+  }
+}
+'
+```
+
+
 
 
 -------------------------------------------------------------------------------------------------------------------
